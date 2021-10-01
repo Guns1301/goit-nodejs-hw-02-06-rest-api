@@ -1,18 +1,18 @@
-const Contact = require("./contacts-schema");
+const Contact = require('./contacts-schema');
 
 const getAllContacts = async () => {
   return await Contact.find();
 };
 
-const getContactById = async (contactId) => {
+const getContactById = async contactId => {
   return await Contact.findById(contactId);
 };
 
-const addContact = async (body) => {
+const addContact = async body => {
   return await Contact.create(body);
 };
 
-const removeContact = async (contactId) => {
+const removeContact = async contactId => {
   return await Contact.findByIdAndDelete(contactId);
 };
 

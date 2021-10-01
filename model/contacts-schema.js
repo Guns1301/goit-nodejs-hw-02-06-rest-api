@@ -1,11 +1,11 @@
-const { Schema, model } = require("mongoose"); // создание схемы и модели
+const { Schema, model } = require("mongoose");
 
 const contactSchema = new Schema(
-  //  первый агрумент - описывает схему
   {
     name: {
       type: String,
-      required: [true, "Please, set name for contact"],
+      required: [true, "Please, set name for contact."],
+      // свойство required отвечает является ли поле обязательным. если true - обязательное
     },
     email: {
       type: String,

@@ -1,11 +1,10 @@
 const mongoose = require("mongoose");
-
 require("dotenv").config();
 // dotenv отвечает за содержимое файла .env превращаеться в еще одно переменное окружение
 const MONGO_CONNECTION = process.env.MONGO_CONNECTION;
 
 const db = mongoose.connect(MONGO_CONNECTION, {
-  //подключение к базе данных
+  // подключение к базе данных
   useNewUrlParser: true,
   useUnifiedTopology: true,
   useCreateIndex: true,
