@@ -5,13 +5,13 @@ const cors = require("cors");
 
 const contactsRouter = require("./routes/api/contacts");
 
-const app = express(); // чтобы создать сервер нужно выхвать express как функцию
+const app = express(); // чтобы создать сервер нужно вызвать express как функцию
 
 const formatsLogger = app.get("env") === "development" ? "dev" : "short";
 
 app.use(logger(formatsLogger));
 app.use(cors());
-app.use(express.json());
+app.use(express.json()); //востановить из строки в объект
 
 app.use("/api/contacts", contactsRouter);
 
@@ -20,7 +20,12 @@ app.use((req, res) => {
 });
 
 app.use((err, req, res, next) => {
-  res.status(500).json({ message: err.message });
+  // метод use создает middleware - промежуточные обработчики
+  const status = err.status || 500;
+  res
+    .status(status)
+    .json({ status: "fail", code: status, message: err.message });
+  //next - функция которая передает обработку дальше
 });
 
 module.exports = app;
