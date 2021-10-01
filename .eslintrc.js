@@ -12,5 +12,5 @@ module.exports = {
     "comma-dangle": "off",
     "space-before-function-paren": "off",
   },
-  quotes: ["error", "single"],
+  quotes: [2, "double", { avoidEscape: true }, "error", "single"],
 };
