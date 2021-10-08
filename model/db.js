@@ -27,7 +27,7 @@ mongoose.connection.on("disconnected", () => {
 process.on("SIGINT", async () => {
   mongoose.connection.close(() => {
     console.log("Database connection terminated.");
-    process.exit(1);
+    process.exit(1); // команда закрывающая все процессы
   });
 });
 
