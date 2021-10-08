@@ -42,12 +42,13 @@ userSchema.pre("save", async function (next) {
   if (this.isModified("password")) {
     const salt = await bcrypt.genSalt(6);
     this.password = await bcrypt.hash(this.password, salt);
+    // соль (salt) - это дополнительный аргумент который делает строку еще более усложенной при хэшировании
   }
   next();
 });
 
 userSchema.methods.isValidPassword = async function (password) {
-  return await bcrypt.compare(password, this.password);
+  return await bcrypt.compare(password, this.password); // сравнение введенного пароля и захэшированного из базы - если совпадает, метод compare возвращает true
 };
 
 const User = model("user", userSchema);

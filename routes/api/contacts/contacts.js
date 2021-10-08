@@ -1,20 +1,32 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
 const {
   validationAddedContact,
   validationUpdatedContact,
   validateMongoId,
   validateUpdateFavorite,
-} = require('./validation');
-const Controllers = require('../../controllers/contacts-controllers');
-
-router.get('/', Controllers.getAllContacts).post('/', validationAddedContact, Controllers.addContact);
+} = require("./validation");
+const Controllers = require("../../../controllers/contacts-controllers");
 
 router
-  .get('/:contactId', validateMongoId, Controllers.getContactById)
-  .delete('/:contactId', validateMongoId, Controllers.removeContact)
-  .put('/:contactId', validateMongoId, validationUpdatedContact, Controllers.updateContact);
+  .get("/", Controllers.getAllContacts)
+  .post("/", validationAddedContact, Controllers.addContact);
 
-router.patch('/:contactId/favorite', validateMongoId, validateUpdateFavorite, Controllers.updateStatusContact);
+router
+  .get("/:contactId", validateMongoId, Controllers.getContactById)
+  .delete("/:contactId", validateMongoId, Controllers.removeContact)
+  .put(
+    "/:contactId",
+    validateMongoId,
+    validationUpdatedContact,
+    Controllers.updateContact
+  );
+
+router.patch(
+  "/:contactId/favorite",
+  validateMongoId,
+  validateUpdateFavorite,
+  Controllers.updateStatusContact
+);
 
 module.exports = router;

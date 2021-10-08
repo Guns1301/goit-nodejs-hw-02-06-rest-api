@@ -50,7 +50,7 @@ const login = async (req, res, next) => {
 
     const id = user.id;
     const payload = { id };
-    const token = jwt.sign(payload, SECRET_KEY, { expiresIn: "3h" });
+    const token = jwt.sign(payload, SECRET_KEY, { expiresIn: "3h" }); // время жизни токена
     await Users.updateToken(id, token);
 
     const {

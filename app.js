@@ -6,7 +6,7 @@ const cors = require("cors");
 const tokenCheck = require("./helpers/token-check");
 const { HttpCodes, Limits } = require("./helpers/constants");
 
-const contactsRouter = require("./routes/api/contacts");
+const contactsRouter = require("./routes/api/contacts/contacts");
 const usersRouter = require("./routes/api/users/users");
 
 const app = express(); // чтобы создать сервер нужно вызвать express как функцию
