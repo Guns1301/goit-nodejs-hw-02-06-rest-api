@@ -1,5 +1,5 @@
-const Joi = require("joi");
-const mongoose = require("mongoose");
+const Joi = require('joi');
+const mongoose = require('mongoose');
 
 const validateAddContact = Joi.object({
   name: Joi.string().trim().min(2).max(30).required(),
@@ -8,7 +8,7 @@ const validateAddContact = Joi.object({
     .pattern(/^\(\d{3}\)\s\d{3}-\d{4}/)
     .optional(),
   favorite: Joi.boolean().optional(),
-}).or("email", "phone");
+}).or('email', 'phone');
 
 const validateUpdateContact = Joi.object({
   name: Joi.string().trim().min(2).max(30).optional(),
@@ -17,11 +17,11 @@ const validateUpdateContact = Joi.object({
     .pattern(/^\(\d{3}\)\s\d{3}-\d{4}/)
     .optional(),
   favorite: Joi.boolean().optional(),
-}).or("name", "email", "phone", "favorite");
+}).or('name', 'email', 'phone', 'favorite');
 
 const validateUpdateFavorite = Joi.object({
   favorite: Joi.boolean().required().messages({
-    "any.required": "Missing 'favorite' field.",
+    'any.required': "Missing 'favorite' field.",
   }),
 });
 
@@ -32,7 +32,7 @@ const validate = async (schema, request, next) => {
   } catch (error) {
     next({
       status: 400,
-      message: error.message.replace(/"/g, ""),
+      message: error.message.replace(/"/g, ''),
     });
   }
 };
@@ -51,7 +51,7 @@ module.exports = {
     if (!mongoose.isValidObjectId(req.params.contactId)) {
       next({
         status: 400,
-        message: "Invalid id.",
+        message: 'Invalid id.',
       });
     }
     next();

@@ -3,7 +3,11 @@ const express = require("express");
 const logger = require("morgan");
 const cors = require("cors");
 
-const contactsRouter = require("./routes/api/contacts");
+const tokenCheck = require("./helpers/token-check");
+const { HttpCodes, Limits } = require("./helpers/constants");
+
+const contactsRouter = require("./routes/api/contacts/contacts");
+const usersRouter = require("./routes/api/users/users");
 
 const app = express(); // чтобы создать сервер нужно вызвать express как функцию
 
@@ -11,21 +15,22 @@ const formatsLogger = app.get("env") === "development" ? "dev" : "short";
 
 app.use(logger(formatsLogger));
 app.use(cors());
-app.use(express.json()); //востановить из строки в объект
+app.use(express.json({ limit: Limits.JSON }));
 
-app.use("/api/contacts", contactsRouter);
+app.use("/api/contacts", tokenCheck, contactsRouter);
+app.use("/api/users", usersRouter);
 
 app.use((req, res) => {
-  res.status(404).json({ message: "Not found" });
+  res
+    .status(HttpCodes.NOT_FOUND)
+    .json({ status: "error", code: HttpCodes.NOT_FOUND, message: "Not found" });
 });
 
 app.use((err, req, res, next) => {
-  // метод use создает middleware - промежуточные обработчики
-  const status = err.status || 500;
+  const status = err.status || HttpCodes.INTERNAL_SERVER_ERROR;
   res
     .status(status)
     .json({ status: "fail", code: status, message: err.message });
-  //next - функция которая передает обработку дальше
 });
 
 module.exports = app;
