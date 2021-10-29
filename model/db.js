@@ -1,10 +1,22 @@
 const mongoose = require("mongoose");
 require("dotenv").config();
 // dotenv отвечает за содержимое файла .env превращаеться в еще одно переменное окружение
-const MONGO_CONNECTION = process.env.MONGO_CONNECTION;
+let MONGO_CONNECTION = null;
+
+switch (process.env.NODE_ENV) {
+  case "test":
+    MONGO_CONNECTION = process.env.MONGO_CONNECTION_TEST;
+    break;
+  case "development":
+    MONGO_CONNECTION = process.env.MONGO_CONNECTION;
+    break;
+  default:
+    // Here would be DB connection link to prod DB if we had one
+    MONGO_CONNECTION = process.env.MONGO_CONNECTION;
+    break;
+}
 
 const db = mongoose.connect(MONGO_CONNECTION, {
-  // подключение к базе данных
   useNewUrlParser: true,
   useUnifiedTopology: true,
   useCreateIndex: true,
@@ -27,7 +39,7 @@ mongoose.connection.on("disconnected", () => {
 process.on("SIGINT", async () => {
   mongoose.connection.close(() => {
     console.log("Database connection terminated.");
-    process.exit(1); // команда закрывающая все процессы
+    process.exit(1);
   });
 });
 

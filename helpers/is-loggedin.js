@@ -1,8 +1,10 @@
 const passport = require("passport");
 const { Strategy: JwtStrategy, ExtractJwt } = require("passport-jwt");
 const Users = require("../model/users-methods");
-const { HttpCodes } = require("./constants");
+const { HttpCodes, Statuses } = require("./constants");
+const { ResponseMessages } = require("./messages");
 require("dotenv").config();
+
 const SECRET_KEY = process.env.SECRET_KEY;
 
 const opts = {};
@@ -13,6 +15,7 @@ passport.use(
   new JwtStrategy(opts, async (payload, done) => {
     try {
       const user = await Users.findUserById(payload.id);
+
       if (!user) {
         return done(new Error("User not found."));
       }
@@ -28,7 +31,7 @@ passport.use(
   })
 );
 
-const tokenCheck = (req, res, next) => {
+const isLoggedIn = (req, res, next) => {
   passport.authenticate("jwt", { session: false }, (error, user) => {
     const headerAuth = req.get("Authorization");
     let token = null;
@@ -39,9 +42,9 @@ const tokenCheck = (req, res, next) => {
 
     if (error || !user || token !== user?.token) {
       return res.status(HttpCodes.UNAUTHORIZED).json({
-        status: "error",
+        status: Statuses.error,
         code: HttpCodes.UNAUTHORIZED,
-        message: "Not authorized.",
+        message: ResponseMessages.notAuthorized,
       });
     }
 
@@ -50,4 +53,4 @@ const tokenCheck = (req, res, next) => {
   })(req, res, next);
 };
 
-module.exports = tokenCheck;
+module.exports = isLoggedIn;

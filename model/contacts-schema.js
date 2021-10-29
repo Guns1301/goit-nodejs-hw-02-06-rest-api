@@ -1,4 +1,5 @@
 const { Schema, model } = require("mongoose");
+const mongoosePaginate = require("mongoose-paginate-v2");
 
 const contactSchema = new Schema(
   {
@@ -17,6 +18,10 @@ const contactSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    owner: {
+      type: SchemaTypes.ObjectId,
+      ref: "user",
+    },
   },
   // второй аргумент - обьект настроек
   {
@@ -31,6 +36,8 @@ const contactSchema = new Schema(
     },
   }
 );
+
+contactSchema.plugin(mongoosePaginate);
 
 const Contact = model("contact", contactSchema); // первый аргумент - название коллекции с которой эта модель будет работать в единственном числе. второй аргумент - схема
 
