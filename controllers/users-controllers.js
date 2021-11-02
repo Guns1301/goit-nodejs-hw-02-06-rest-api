@@ -1,14 +1,18 @@
 const fs = require("fs/promises");
 const path = require("path");
+const jwt = require("jsonwebtoken");
+require("dotenv").config();
+const UploadAvatarService = require("../services/local-upload");
+const sendVerificationEmail = require("../services/sendgrid-email");
 const Users = require("../model/users-methods");
 const { HttpCodes, Statuses, Limits } = require("../helpers/constants");
 const {
   ResponseMessages,
   ResourseNotFoundMessage,
 } = require("../helpers/messages");
-const UploadAvatarService = require("../services/local-upload");
-const jwt = require("jsonwebtoken");
-require("dotenv").config();
+// const UploadAvatarService = require("../services/local-upload");
+// const jwt = require("jsonwebtoken");
+// require("dotenv").config();
 
 const SECRET_KEY = process.env.SECRET_KEY;
 
@@ -24,9 +28,18 @@ const signup = async (req, res, next) => {
       });
     }
 
-    const { id, email, subscription, avatarURL } = await Users.createUser(
-      req.body
-    );
+    // const { id, email, subscription, avatarURL } = await Users.createUser(
+    //   req.body
+    // );
+    const { id, name, email, subscription, avatarURL, verificationToken } =
+      await Users.createUser(req.body);
+
+    // Wrapping in try-catch, to handle e-mail errors separately. We don't want issues with e-mail to prevent a user from registering
+    try {
+      await sendVerificationEmail(name, email, verificationToken);
+    } catch (error) {
+      console.log("Email service failed: ", error.message);
+    }
 
     return res.status(HttpCodes.CREATED).json({
       status: Statuses.success,
@@ -34,6 +47,7 @@ const signup = async (req, res, next) => {
       message: ResponseMessages.registedSuccess,
       user: {
         id,
+        name,
         email,
         avatarURL,
         subscription,
@@ -50,15 +64,17 @@ const login = async (req, res, next) => {
     const user = await Users.findUserByEmail(email);
     const isValidPassword = await user?.isValidPassword(password);
 
-    if (!user || !isValidPassword) {
+    if (!user.isVerified) {
       return res.status(HttpCodes.UNAUTHORIZED).json({
         status: Statuses.error,
         code: HttpCodes.UNAUTHORIZED,
-        message: ResponseMessages.loginFail,
+        message: ResponseMessages.verificationMissing,
       });
     }
 
     const id = user.id;
+    const { id, name } = user;
+
     const payload = { id };
     const token = jwt.sign(payload, SECRET_KEY, {
       expiresIn: Limits.tokenLife,
@@ -74,7 +90,7 @@ const login = async (req, res, next) => {
       code: HttpCodes.OK,
       message: ResponseMessages.loginSuccess,
       token,
-      user: { email, avatarURL, subscription },
+      user: { name, email, avatarURL, subscription },
     });
   } catch (error) {
     next(error);
@@ -94,12 +110,11 @@ const logout = async (req, res, next) => {
 
 const current = async (req, res, next) => {
   try {
-    const { email, avatarURL, subscription } = req.user;
-
+    const { name, email, avatarURL, subscription } = req.user;
     return res.json({
       status: Statuses.success,
       code: HttpCodes.OK,
-      user: { email, avatarURL, subscription },
+      user: { name, email, avatarURL, subscription },
     });
   } catch (error) {
     next(error);
@@ -121,7 +136,7 @@ const updateSubscription = async (req, res, next) => {
       status: Statuses.success,
       code: HttpCodes.OK,
       message: ResponseMessages.subcriptionUpdatedSuccess,
-      payload: { email, avatarURL, subscription },
+      payload: { name, email, avatarURL, subscription },
     });
   } catch (error) {
     next(error);
@@ -158,6 +173,64 @@ const avatars = async (req, res, next) => {
   }
 };
 
+const verifyUser = async (req, res, next) => {
+  try {
+    const verificationToken = req.params.verificationToken;
+    const user = await Users.findUserByVerificationToken(verificationToken);
+
+    if (!user) {
+      return res.status(HttpCodes.NOT_FOUND).json(ResourseNotFoundMessage);
+    }
+
+    await Users.updateVerificationStatus(user.id, true, null);
+    return res.json({
+      status: Statuses.success,
+      code: HttpCodes.OK,
+      message: ResponseMessages.verified,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const repeatVerifyUser = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(HttpCodes.BAD_REQUEST).json({
+        status: Statuses.error,
+        code: HttpCodes.BAD_REQUEST,
+        message: ResponseMessages.missingEmail,
+      });
+    }
+
+    const user = await Users.findUserByEmail(email);
+
+    if (!user) {
+      return res.status(HttpCodes.NOT_FOUND).json(ResourseNotFoundMessage);
+    }
+    const { name, isVerified, verificationToken } = user;
+
+    if (isVerified) {
+      return res.status(HttpCodes.BAD_REQUEST).json({
+        status: Statuses.error,
+        code: HttpCodes.BAD_REQUEST,
+        message: ResponseMessages.alreadyVerified,
+      });
+    }
+
+    await sendVerificationEmail(name, email, verificationToken);
+    return res.json({
+      status: Statuses.success,
+      code: HttpCodes.OK,
+      message: ResponseMessages.verificationSent,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   signup,
   login,
@@ -165,4 +238,6 @@ module.exports = {
   current,
   updateSubscription,
   avatars,
+  verifyUser,
+  repeatVerifyUser,
 };
