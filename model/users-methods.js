@@ -8,9 +8,16 @@ const findUserByEmail = async (email) => {
   return await User.findOne({ email }); // findOne возвращает объект, а find - массив
 };
 
+const findUserByVerificationToken = async (verificationToken) => {
+  return await User.findOne({ verificationToken });
+};
+
 const createUser = async (body) => {
   const user = new User(body);
   return await user.save();
+};
+const updateVerificationStatus = async (id, isVerified, verificationToken) => {
+  return await User.updateOne({ _id: id }, { isVerified, verificationToken });
 };
 
 const updateToken = async (userId, token) => {
@@ -28,8 +35,10 @@ const updateAvatar = async (id, avatarURL) => {
 module.exports = {
   findUserById,
   findUserByEmail,
+  findUserByVerificationToken,
   createUser,
   updateToken,
   updateSubscription,
   updateAvatar,
+  updateVerificationStatus,
 };
